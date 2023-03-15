@@ -1,6 +1,6 @@
 #include <iostream>
-#include<cstring>
-#include </home/robert/Desktop/POO/1.h>
+#include <cstring>
+#include "data.h"
 
 
 class Medicament
@@ -82,9 +82,8 @@ public:
     Farmacie& operator+=(Medicament const& newmed)
     {   
         nrMedicamente++;
-        Medicament *aux = new Medicament[nrMedicamente + 1];
-        med = new Medicament[nrMedicamente + 1];
-        for ( int i=0; i <= nrMedicamente - 1; i++ )
+        Medicament *aux = new Medicament[nrMedicamente];
+        for ( int i=0; i < nrMedicamente - 1; i++ )
             aux[i] = med[i];
         aux[nrMedicamente - 1] = newmed;
         med = aux;
@@ -95,7 +94,6 @@ public:
     {
         nrMedicamente++;
         Medicament *aux = new Medicament[nrMedicamente + 1];
-        med = new Medicament[nrMedicamente + 1];
         for ( int i=0; i < nrMedicamente - 1; i++ )
             aux[i] = med[i];
         aux[nrMedicamente - 1] = plusmed;
@@ -126,23 +124,19 @@ int main()
   	Data d(1,1,2020);
     d.afisData();
     Medicament m1("Parasinus",9.5, 10, 12, 2019), m2("Aspirina",5.12, d),m3;
-///    std::cin>>m3;
+    std::cin>>m3;
     std::cout<<m1;
     if (m1<m2) std::cout<<"m1 este fabricat inaintea m2"<<'\n';
     else std::cout<<"m2 este fabricat inaintea m1";
     Farmacie f1("Farmac");
+    Farmacie f2;
     std::cout<<f1.getNume()<<'\n';
     f1 += m1;
-    std::cout<<f1.getVmed()[0];
-    std::cout<<f1.getVmed()[0];
-    std::cout<<f1.getVmed()[1];
     f1 += m2;
-    std::cout<<f1.getVmed()[0];
-    std::cout<<f1.getVmed()[1];
-    f1 = f1 + m1; //adaugare medicament m2 in lista de medicamente a farmaciei
-    std::cout<<f1.getVmed()[1];
-    Farmacie f2 = f1;
-    std::cout<<f2.getVmed()[0];
+    f1 += m3;
+    f2 = f2 + m1; //adaugare medicament m2 in lista de medicamente a farmaciei
+    std::cout<<f2;
+    f2 = f1;
     std::cout<<f2;	//afisarea tuturor medicamentelor
     return 0;
 }
