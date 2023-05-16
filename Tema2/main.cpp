@@ -294,6 +294,7 @@ int main()
     break;
   }
 } while (NumarMeniu != 0);
+std::cout<<"\n Ati ales sa inchideti programul! Bye Bye ";
 }
 
 
