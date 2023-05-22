@@ -2,20 +2,6 @@
 #include<vector>
 #include<string>
 
-
-// Tema 6. Se dorește implementarea unei aplicații OOP care sa permita gestionarea activității unor farmacii apartinand proprietarului X.
-// Pentru fiecare farmacie se cunoaște cel puțin denumirea, numărul de angajați și profiturile pe fiecare luna. Farmaciile pot fi și online. 
-// În acest caz se cunoaște doar adresa web, numărul de vizitatori și discountul utilizat.
-
-// Cerința suplimentară: 
-// - Să se adauge toate câmpurile relevante pentru modelarea acestei probleme.
-// - Să se construiască clasa template GestionareFarmacii care sa conțină informații despre diversele tipuri de farmacii. Clasa conține indexul farmaciei (incrementat automat la adaugarea unei noi file), id-ul lanțului (constant) și o structura de obiecte, alocată dinamic. Sa se supraincarce operatorul += pentru inserarea unei noi farmacii online în structura.
-// - Să se construiască o specializare pentru tipul Farmacie_online care sa conțină și să afișeze doar numărul total de vizitatori ai farmaciilor online. 
-
-// Structura de date: vector sau list <tuple<web, nr_vizitatori, discount>> se rețin farmaciile online.
-
-
-
 class Farmacie
 {
 protected:
@@ -25,8 +11,8 @@ protected:
 public:
     Farmacie() = default;
     Farmacie(const std::string& denumire,const int& nr_angajati, const std::vector<double>& profit_lunar) : denumire(denumire), nr_angajati(nr_angajati), profit_lunar(profit_lunar) {};
-    friend std::istream& operator>>(std::istream& in, Farmacie* farma);
-    friend std::ostream& operator<<(std::ostream& out,const Farmacie* farma);
+    friend  std::istream& operator>>(std::istream& in, Farmacie* farma);
+    friend  std::ostream& operator<<(std::ostream& out,const Farmacie* farma);
     virtual ~Farmacie() = default;
 
 
@@ -42,7 +28,8 @@ public:
     Farmacie_online() = default;
     Farmacie_online(const std::string& web, const int& nr_vizitatori, const int& discount) : web(web), nr_vizitatori(nr_vizitatori), discount(discount) {};
     friend std::istream& operator>>(std::istream& in, Farmacie_online* farma);
-    friend std::ostream& operator<<(std::ostream& out, Farmacie_online* farma);
+    friend std::ostream& operator<<(std::ostream& out,const Farmacie_online* farma);
+    int getNrVizitatori() const { return nr_vizitatori; }
     ~Farmacie_online() = default;
 };
 
@@ -62,10 +49,11 @@ std::istream& operator>>(std::istream& in, Farmacie* farma)
         farma->profit_lunar.push_back(profit);
     }
     return in;
+
 }
 
 std::ostream& operator<<(std::ostream& out,const Farmacie* farma)
-{
+{   
     out << "Denumire: " << farma->denumire << '\n';
     out << "Numar angajati: " << farma->nr_angajati << '\n';
     out << "Profit pe ultimele luni: ";
@@ -88,7 +76,7 @@ std::istream& operator>>(std::istream& in, Farmacie_online* farma)
     return in;
 }
 
-std::ostream& operator<<(std::ostream& out, Farmacie_online* farma)
+std::ostream& operator<<(std::ostream& out,const Farmacie_online* farma)
 {
     out << "Adresa web: " << farma->web << '\n';
     out << "Numar vizitatori: " << farma->nr_vizitatori << '\n';
@@ -96,31 +84,128 @@ std::ostream& operator<<(std::ostream& out, Farmacie_online* farma)
     return out;
 }
 
-
-
 template <class T>
 class GestionareFarmacii {
 private:
+    static GestionareFarmacii* instance;
     static int indexFarmacie;
     const int idLant;
     std::vector<T*> farmacii;
-
+    GestionareFarmacii(int& lant) : idLant(lant) {}
 public:
-    GestionareFarmacii(int idLant) : idLant(idLant) {}
-
-    ~GestionareFarmacii() {
-        for (T* farmacie : farmacii) {
-            delete farmacie;
+    ~GestionareFarmacii() = default;
+    GestionareFarmacii() = delete;
+    static GestionareFarmacii* getInstance(int& lant) {
+        if (!instance) {
+            instance = new GestionareFarmacii(lant);
         }
-    }
-
-    void operator+=(T* farmacie) {
+        return instance;
+    }  
+    void add(T* farmacie) {
         farmacii.push_back(farmacie);
         GestionareFarmacii::indexFarmacie++;
     }
-
-    void afisareFarmacii() const {
-        for (const T* farmacie : farmacii) 
-            std::cout << farmacie << '\n';
+    std::vector <T*> getFarmacii() const {
+        return farmacii;
+    }
+    int getNrVizitatoriTotal() const {
+        int nrVizitatoriTotal = 0;
+        for (const T* farmacie : farmacii) {
+            const Farmacie_online* farmacieOnline = dynamic_cast<const Farmacie_online*>(farmacie);
+            if ( farmacieOnline != nullptr) {
+                nrVizitatoriTotal += farmacieOnline->getNrVizitatori();
+            }
         }
-    };
+        return nrVizitatoriTotal;
+    }
+    GestionareFarmacii(const GestionareFarmacii&) = delete;
+    GestionareFarmacii& operator=(const GestionareFarmacii&) = delete; 
+
+
+template <class U>
+ void afisareFarmacii() const {
+        for (const T* farmacie : farmacii) {
+            const U* farmacieDerived = dynamic_cast<const U*>(farmacie);
+            if (farmacieDerived != nullptr) {
+                std::cout << farmacieDerived << '\n';
+            }
+        }
+
+ }
+};
+
+class FarmacieFactory {
+public:
+    static Farmacie* createFarmacie(const std::string& type)
+    {
+        if (type == "Farmacie")
+            return new Farmacie();
+        else if (type == "Farmacie_online")
+            return new Farmacie_online();
+        else
+            return nullptr;
+    }
+};
+
+class FarmacieBuilder {
+private:
+    std::string denumire;
+    int nr_angajati;
+    std::vector<double> profit_lunar;
+
+public:
+    FarmacieBuilder() {}
+
+    FarmacieBuilder& setDenumire(const std::string& denumire) {
+        this->denumire = denumire;
+        return *this;
+    }
+
+    FarmacieBuilder& setNrAngajati(int nr_angajati) {
+        this->nr_angajati = nr_angajati;
+        return *this;
+    }
+
+    FarmacieBuilder& addProfitLunar(std::vector<double> vectorprofit) {
+        this->profit_lunar = vectorprofit;
+        return *this;
+    }
+
+    Farmacie* build() {
+        return new Farmacie(denumire, nr_angajati, profit_lunar);
+    }
+};
+
+class FarmacieOnlineBuilder {
+private:
+    std::string web;
+    int nr_vizitatori;
+    int discount;
+
+public:
+    FarmacieOnlineBuilder() {}
+
+    FarmacieOnlineBuilder& setWeb(const std::string& web) {
+        this->web = web;
+        return *this;
+    }
+
+    FarmacieOnlineBuilder& setNrVizitatori(int nr_vizitatori) {
+        this->nr_vizitatori = nr_vizitatori;
+        return *this;
+    }
+
+    FarmacieOnlineBuilder& setDiscount(int discount) {
+        this->discount = discount;
+        return *this;
+    }
+
+    Farmacie_online* build() {
+        Farmacie_online* farmacie_online = new Farmacie_online(web, nr_vizitatori, discount);
+        return farmacie_online;
+    }
+};
+
+
+template <class T>
+GestionareFarmacii<T>* GestionareFarmacii<T>::instance = nullptr;
